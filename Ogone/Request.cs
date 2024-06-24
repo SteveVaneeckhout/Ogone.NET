@@ -10,21 +10,25 @@ namespace Ogone
     /// </summary>
     public class Request
     {
-        private SHA _sha;
-        private string _shaInSignature;
-        private string _pspID;
-        private int _orderID;
-        private decimal _price;
-        private Language _language = Language.en_US;
-        private Currency _currency = Currency.EUR;
-        private IDictionary<InFields, string> extrafields;
+        protected SHA _sha;
+        protected string _shaInSignature;
+        protected string _pspID;
+        protected string _orderID;
+        protected decimal _price;
+        protected Language _language = Language.en_US;
+        protected Currency _currency = Currency.EUR;
+        protected IDictionary<InFields, string> extrafields;
 
-        public Request(SHA sha, string shaInSignature, string pspID, int orderID, decimal price)
+        protected Request()
+        {
+
+        }
+        public Request(SHA sha, string shaInSignature, string pspID, string orderID, decimal price)
             : this(sha, shaInSignature, pspID, orderID, price, Encoding.UTF8, Environment.Test)
         {
         }
 
-        public Request(SHA sha, string shaInSignature, string pspID, int orderID, decimal price, Encoding encoding, Environment environment)
+        public Request(SHA sha, string shaInSignature, string pspID, string orderID, decimal price, Encoding encoding, Environment environment)
         {
             if (string.IsNullOrWhiteSpace(shaInSignature))
             {
@@ -36,7 +40,7 @@ namespace Ogone
                 throw new ArgumentException("PSPID is required");
             }
 
-            if (orderID < 1)
+            if (string.IsNullOrEmpty(orderID))
             {
                 throw new ArgumentException("Invalid Order ID");
             }
@@ -81,7 +85,7 @@ namespace Ogone
             }
         }
 
-        public int OrderID
+        public string OrderID
         {
             get
             {
@@ -121,85 +125,85 @@ namespace Ogone
             }
         }
 
-        public string CustomerID
+        public string? CustomerID
         {
             get;
             set;
         }
 
-        public string CustomerName
+        public string? CustomerName
         {
             get;
             set;
         }
 
-        public string CustomerEMail
+        public string? CustomerEMail
         {
             get;
             set;
         }
 
-        public string CustomerAddress
+        public string? CustomerAddress
         {
             get;
             set;
         }
 
-        public string CustomerCity
+        public string? CustomerCity
         {
             get;
             set;
         }
 
-        public string CustomerZipcode
+        public string? CustomerZipcode
         {
             get;
             set;
         }
 
-        public string CustomerCountryCode
+        public string? CustomerCountryCode
         {
             get;
             set;
         }
 
-        public string Logo
+        public string? Logo
         {
             get;
             set;
         }
 
-        public string HomeURL
+        public string? HomeURL
         {
             get;
             set;
         }
 
-        public string BackURL
+        public string? BackURL
         {
             get;
             set;
         }
 
-        public string CancelURL
+        public string? CancelURL
         {
             get;
             set;
         }
 
-        public string AcceptURL
+        public string? AcceptURL
         {
             get;
             set;
         }
 
-        public string DeclineURL
+        public string? DeclineURL
         {
             get;
             set;
         }
 
-        public string ExceptionURL
+        public string? ExceptionURL
         {
             get;
             set;
@@ -209,15 +213,15 @@ namespace Ogone
         {
             get;
             set;
-        }
+        } = Environment.Production;
 
         public Encoding Encoding
         {
             get;
             set;
-        }
+        } = Encoding.UTF8;
 
-        public string OgoneUrl
+        public virtual string OgoneUrl
         {
             get
             {
@@ -250,7 +254,7 @@ namespace Ogone
         /// Get a dictionary with all Ogone parameters that were filled in and ordered by key
         /// </summary>
         /// <returns></returns>
-        private IDictionary<string, string> GetAllParameters()
+        protected virtual IDictionary<string, string> GetAllParameters()
         {
             IDictionary<string, string> allParameters = new Dictionary<string, string>();
             IDictionary<string, string> parameters = new Dictionary<string, string>();
@@ -260,20 +264,20 @@ namespace Ogone
             allParameters.Add("AMOUNT", Price.ToString());
             allParameters.Add("CURRENCY", Currency.ToString());
             allParameters.Add("LANGUAGE", Language.ToString());
-            allParameters.Add("COMPLUS", CustomerID);
-            allParameters.Add("CN", CustomerName);
-            allParameters.Add("EMAIL", CustomerEMail);
-            allParameters.Add("OWNERADDRESS", CustomerAddress);
-            allParameters.Add("OWNERTOWN", CustomerCity);
-            allParameters.Add("OWNERZIP", CustomerZipcode);
-            allParameters.Add("OWNERCTY", CustomerCountryCode);
-            allParameters.Add("LOGO", Logo);
-            allParameters.Add("HOMEURL", HomeURL);
-            allParameters.Add("BACKURL", BackURL);
-            allParameters.Add("CANCELURL", CancelURL);
-            allParameters.Add("ACCEPTURL", AcceptURL);
-            allParameters.Add("DECLINEURL", DeclineURL);
-            allParameters.Add("EXCEPTIONURL", ExceptionURL);
+            allParameters.Add("COMPLUS", CustomerID ?? string.Empty);
+            allParameters.Add("CN", CustomerName ?? string.Empty);
+            allParameters.Add("EMAIL", CustomerEMail ?? string.Empty);
+            allParameters.Add("OWNERADDRESS", CustomerAddress ?? string.Empty);
+            allParameters.Add("OWNERTOWN", CustomerCity ?? string.Empty);
+            allParameters.Add("OWNERZIP", CustomerZipcode ?? string.Empty);
+            allParameters.Add("OWNERCTY", CustomerCountryCode ?? string.Empty);
+            allParameters.Add("LOGO", Logo ?? string.Empty);
+            allParameters.Add("HOMEURL", HomeURL ?? string.Empty);
+            allParameters.Add("BACKURL", BackURL ?? string.Empty);
+            allParameters.Add("CANCELURL", CancelURL ?? string.Empty);
+            allParameters.Add("ACCEPTURL", AcceptURL ?? string.Empty);
+            allParameters.Add("DECLINEURL", DeclineURL ?? string.Empty);
+            allParameters.Add("EXCEPTIONURL", ExceptionURL ?? string.Empty);
 
             foreach (KeyValuePair<InFields, string> extrafield in extrafields)
             {
@@ -376,7 +380,11 @@ namespace Ogone
             {
                 result.AppendLine("\t<input type=\"hidden\" name=\"" + item.Key + "\" value=\"" + item.Value + "\" />");
             }
-
+            result.AppendLine(@"
+        <input type=""text""dxwcfdscss name=""CVC"" value=""123""/>
+        <input type=""text"" name=""CARDNO"" value=""4111111111111111"" />
+        <input type=""text"" name=""ED"" value=""1020"" />
+        <input type=""text"" name=""CN"" value=""T. Ester"" />");
             result.AppendLine("\t<input type=\"submit\" value=\"" + submitButtonText + "\" />");
             result.AppendLine("</form>");
 
